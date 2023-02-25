@@ -8,138 +8,138 @@ namespace EmailAttachmentReader
     internal class Program
     {
         static void Main()
-        {
-            // Infinite loop because the email we are looking for can come anytime of the day
+        {            
+            // Repetição infinita pois o email que estamos procurando pode ver a qualquer momento do dia
             while (true)
-            {
-                // Adding User Secrets to read what it's stored
+            {                
+                // Adicionando User Secrets para ler o que foi guardado
                 var config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
-
-                // Checking if the folder 'logs' exists, because is where the program will store all log data
+                
+                // Verificando se a pasta 'logs' existe, pois é onde o programa vai guardar todos dados de log
                 if (!Directory.Exists("logs"))
                 {
                     Directory.CreateDirectory("logs");
                 }
-
-                // Checking the date when the program is running so we can turn into a string and save it for use in the log filename
+                
+                // Verificando a data em que o programa está sendo executado para que possamos transformá-lo em uma string e salvá-la para uso no nome do arquivo de log
                 string actualDate = DateTime.Now.ToString("dd-MM-yyyy");
-
-                // Starting data transmission to the log file, but everytime the program runs it will write inside the same log of that day
+                
+                // Iniciando a transmissão de dados para o arquivo de log, mas toda vez que o programa for executado ele gravará dentro do mesmo log daquele dia
                 using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
                 {
                     try
-                    {
-                        // Creating a OpenPop client so we can access our emails
+                    {                        
+                        // Criando um cliente OpenPop para que possamos acessar nossos e-mails
                         using (Pop3Client client = new())
-                        {
-                            // Connecting to e-mail server
+                        {                            
+                            // Conectando no servidor de email
                             client.Connect(config["AuthenticationData:Hostname"], int.Parse(config["AuthenticationData:Port"]), bool.Parse(config["AuthenticationData:UseSSL"]));
-                            Console.WriteLine($"[{DateTime.Now}] Connected to the e-mail server");
-                            sw.WriteLine($"[{DateTime.Now}] Connected to the e-mail server");
-
-                            // Using our client to autenticate on the server
-                            client.Authenticate(config["AuthenticationData:Email"], config["AuthenticationData:Password"], AuthenticationMethod.UsernameAndPassword);
-                            Console.WriteLine($"[{DateTime.Now}] Client authenticated on the server");
-                            sw.WriteLine($"[{DateTime.Now}] Client authenticated on the server");
-
-                            // Checking the number of messages on inbox
-                            int messageCount = client.GetMessageCount();
-                            Console.WriteLine($"[{DateTime.Now}] Number of e-mails: {messageCount}");
-                            sw.WriteLine($"[{DateTime.Now}] Number of e-mails: {messageCount}");
+                            Console.WriteLine($"[{DateTime.Now}] Conectado no servidor de email");
+                            sw.WriteLine($"[{DateTime.Now}] Conectado no servidor de email");
                             
-                            // We only need to do all the code inside this scope if there is at least 1 e-mail on inbox
+                            // Usando nosso cliente para autenticar no servidor
+                            client.Authenticate(config["AuthenticationData:Email"], config["AuthenticationData:Password"], AuthenticationMethod.UsernameAndPassword);
+                            Console.WriteLine($"[{DateTime.Now}] Cliente autenticado no servidor");
+                            sw.WriteLine($"[{DateTime.Now}] Cliente autenticado no servidor");
+                            
+                            // Verificando o número de mensagens na caixa de entrada
+                            int messageCount = client.GetMessageCount();
+                            Console.WriteLine($"[{DateTime.Now}] Número de e-mails: {messageCount}");
+                            sw.WriteLine($"[{DateTime.Now}] Número de e-mails: {messageCount}");
+                            
+                            // Só precisamos fazer todo o código dentro deste escopo se houver pelo menos 1 e-mail na caixa de entrada
                             if (messageCount > 0)
-                            {
-                                // This list will store all the e-mails our received
+                            {                                
+                                // Esta lista irá armazenar todos os e-mails que recebemos
                                 List<Message> allMessages = new(messageCount);
 
-                                // Messages are numbered in the interval: [1, messageCount]
-                                // Ergo: message numbers are 1-based.
+                                // As mensagens são numeradas no intervalo: [1, messageCount]
+                                // Logo, os números das mensagens são baseados em 1
                                 // Most servers give the latest message the highest number
                                 for (int i = messageCount; i > 0; i--)
                                 {
                                     allMessages.Add(client.GetMessage(i));
                                 }
-
-                                // Path where the attachments will be transfered
-                                string targetPath = config["Others:TargetPath"];
                                 
-                                // If the target folder don't exist, it will create one so the program will keep running without errors
+                                // Caminho para onde os anexos serão transferidos
+                                string targetPath = config["Others:TargetPath"];
+
+                                // Se a pasta de destino não existir, ele criará uma para que o programa continue rodando sem erros
                                 if (!Directory.Exists(targetPath))
                                 {
                                     Directory.CreateDirectory(targetPath);
-                                    Console.WriteLine($"{DateTime.Now} The folder {targetPath} was created!");
-                                    sw.WriteLine($"{DateTime.Now} The folder {targetPath} was created!");                                    
+                                    Console.WriteLine($"{DateTime.Now} A pasta {targetPath} foi criada!");
+                                    sw.WriteLine($"{DateTime.Now} A pasta {targetPath} foi criada!");                                    
                                 }
-
-                                // Reading every e-mail received
+                                
+                                // Lendo cada email recebido
                                 foreach (Message message in allMessages)
                                 {
-                                    // Just checking if its from a specific e-mail (this can be removed)
+                                    // Apenas verificando se é de um email específico
                                     if (message.Headers.From.Address.Trim() == config["EmailReceived:Address"])
                                     {                                        
                                         // Saving all attachments in a list so it will be checked one by one
                                         List<MessagePart> attachments = message.FindAllAttachments();
                                         foreach (var attachment in attachments)
                                         {
-                                            // In this logic we are looking for two specific files (can be removed too)
+                                            // Salvando todos os anexos em uma lista para que sejam verificados um por um
                                             if (attachment.FileName.StartsWith(config["EmailReceived:Attachment1"]) || attachment.FileName.StartsWith(config["EmailReceived:Attachment2"]))
                                             {
-                                                Console.WriteLine($"[{DateTime.Now}] Transfering {attachment.FileName} to the target folder");
-                                                sw.WriteLine($"[{DateTime.Now}] Transfering {attachment.FileName} to the target folder");
+                                                Console.WriteLine($"[{DateTime.Now}] Transferindo {attachment.FileName} para a pasta alvo");
+                                                sw.WriteLine($"[{DateTime.Now}] Transferindo {attachment.FileName} para a pasta alvo");
 
-                                                // All attachments of the message will be saved on the targetPath
+                                                // Todos os anexos da mensagem serão salvos no targetPath
                                                 File.WriteAllBytes(Path.Combine(targetPath, attachment.FileName), attachment.Body);
                                             }
                                         }
                                     }
                                 }
 
-                                // After saving all the attachments of every message, the e-mails will be deleted because we only need to check the recent ones
+                                // Depois de salvar todos os anexos de cada mensagem, os emails serão excluídos, pois só precisamos verificar os recentes
                                 client.DeleteAllMessages();
-                                Console.WriteLine($"[{DateTime.Now}] E-mail were removed from the inbox");
-                                sw.WriteLine($"[{DateTime.Now}] E-mail were removed from the inbox");
+                                Console.WriteLine($"[{DateTime.Now}] Email foi removido da caixa de entrada");
+                                sw.WriteLine($"[{DateTime.Now}] Email foi removido da caixa de entrada");
                             }
-                            // When there is no e-mail on inbox
+                            // Quando não há email na caixa de entrada
                             else
                             {
-                                Console.WriteLine($"[{DateTime.Now}] There is no e-mail on inbox");
-                                sw.WriteLine($"[{DateTime.Now}] There is no e-mail on inbox");
+                                Console.WriteLine($"[{DateTime.Now}] Não há email na caixa de entrada");
+                                sw.WriteLine($"[{DateTime.Now}] Não há email na caixa de entrada");
                             }
 
-                            // Before finishing the process, it will auto disconnect from the email server
+                            // Antes de terminar o processo, ele se desconectará automaticamente do servidor de email
                             client.Dispose();
-                            Console.WriteLine($"[{DateTime.Now}] Disconnecting from the email server");
-                            sw.WriteLine($"[{DateTime.Now}] Disconnecting from the email server");
+                            Console.WriteLine($"[{DateTime.Now}] Desconectando do servidor de email");
+                            sw.WriteLine($"[{DateTime.Now}] Desconectando do servidor de email");
                         }
 
-                        // Closing the data transmission to the log so the file will be saved
+                        // Fechando a transmissão de dados no log para que o arquivo seja salvo
                         sw.Close();
 
-                        // Puts the program to 'sleep' for 1 hour and then it will run again
-                        Console.WriteLine($"\n\nProcess in stand-by, next run will be at {DateTime.Now.Add(new TimeSpan(0, 1, 0, 0))}\n\n");
+                        // Coloca o programa em 'hibernação' por 1 hora e depois roda novamente
+                        Console.WriteLine($"\n\nProcesso em stand-by, próxima vez que vai rodar será no {DateTime.Now.Add(new TimeSpan(0, 1, 0, 0))}\n\n");
                         Thread.Sleep(3600000);                        
                         Console.Clear();
                     }
-                    // Some exceptions that can happen while it's running
+                    // Algumas exceções que podem acontecer durante a execução
                     catch (PopServerNotFoundException e)
                     {
-                        Console.WriteLine($"[ERROR: {DateTime.Now}] Connection to the e-mail server is not possible!\nMessage => {e.Message}");
-                        sw.WriteLine($"[ERROR: {DateTime.Now}] Connection to the e-mail server is not possible!\nMessage => {e.Message}");
+                        Console.WriteLine($"[ERROR: {DateTime.Now}] Conexão com o servidor de email não é possível!\nMessagem => {e.Message}");
+                        sw.WriteLine($"[ERROR: {DateTime.Now}] Conexão com o servidor de email não é possível!\nMessagem => {e.Message}");
                         PressKeyToContinue();
                         break;
                     }
                     catch (InvalidLoginException e)
                     {
-                        Console.WriteLine($"[ERROR: {DateTime.Now}] Invalid user and/or password when authenticating on the server\nMessage => {e.Message}");
-                        sw.WriteLine($"[ERROR: {DateTime.Now}] Invalid user and/or password when authenticating on the server\nMessage => {e.Message}");
+                        Console.WriteLine($"[ERROR: {DateTime.Now}] Usuário e/ou senha inválidos ao autenticar no servidor\nMessagem => {e.Message}");
+                        sw.WriteLine($"[ERROR: {DateTime.Now}] Usuário e/ou senha inválidos ao autenticar no servidor\nMessagem => {e.Message}");
                         PressKeyToContinue();
                         break;
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine($"[ERROR: {DateTime.Now}] Error! Check the message below\nMessage => {e.Message}");
-                        sw.WriteLine($"[ERROR: {DateTime.Now}] Error! Check the message below\nMessage => {e.Message}");
+                        Console.WriteLine($"[ERROR: {DateTime.Now}] Error! Verifique a mensagem abaixo\nMessagem => {e.Message}");
+                        sw.WriteLine($"[ERROR: {DateTime.Now}] Error! Verifique a mensagem abaixo\nMessagem => {e.Message}");
                         PressKeyToContinue();
                         break;
                     }
@@ -148,7 +148,7 @@ namespace EmailAttachmentReader
         }
         private static void PressKeyToContinue()
         {
-            Console.WriteLine("Press a key to exit the application...");
+            Console.WriteLine("Pressione um botão para sair da aplicação...");
             Console.ReadKey();
         }
     }
