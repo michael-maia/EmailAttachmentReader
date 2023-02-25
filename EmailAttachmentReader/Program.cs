@@ -50,7 +50,7 @@ namespace EmailAttachmentReader
                             // We only need to do all the code inside this scope if there is at least 1 e-mail on inbox
                             if (messageCount > 0)
                             {
-                                // This list will store all the e-mails our received
+                                // This list will store all the e-mails received
                                 List<Message> allMessages = new(messageCount);
 
                                 // Messages are numbered in the interval: [1, messageCount]
@@ -68,8 +68,8 @@ namespace EmailAttachmentReader
                                 if (!Directory.Exists(targetPath))
                                 {
                                     Directory.CreateDirectory(targetPath);
-                                    Console.WriteLine($"{DateTime.Now} The folder {targetPath} was created!");
-                                    sw.WriteLine($"{DateTime.Now} The folder {targetPath} was created!");                                    
+                                    Console.WriteLine($"[{DateTime.Now}] The folder {targetPath} was created!");
+                                    sw.WriteLine($"[{DateTime.Now}] The folder {targetPath} was created!");                                    
                                 }
 
                                 // Reading every e-mail received
