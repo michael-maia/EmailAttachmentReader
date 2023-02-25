@@ -76,8 +76,8 @@ namespace EmailAttachmentReader
                                 foreach (Message message in allMessages)
                                 {
                                     // Apenas verificando se é de um email específico
-                                    //if (message.Headers.From.Address.Trim() == config["EmailReceived:Address"])
-                                    //{                                        
+                                    if (message.Headers.From.Address.Trim() == config["EmailReceived:Address"])
+                                    {                                        
                                         // Saving all attachments in a list so it will be checked one by one
                                         List<MessagePart> attachments = message.FindAllAttachments();
                                         foreach (var attachment in attachments)
@@ -92,13 +92,13 @@ namespace EmailAttachmentReader
                                                 File.WriteAllBytes(Path.Combine(targetPath, attachment.FileName), attachment.Body);
                                             }
                                         }
-                                    //}
+                                    }
                                 }
 
                                 // Depois de salvar todos os anexos de cada mensagem, os emails serão excluídos, pois só precisamos verificar os recentes
-                                //client.DeleteAllMessages();
-                                //Console.WriteLine($"[{DateTime.Now}] Email foi removido da caixa de entrada");
-                                //sw.WriteLine($"[{DateTime.Now}] Email foi removido da caixa de entrada");
+                                client.DeleteAllMessages();
+                                Console.WriteLine($"[{DateTime.Now}] Email foi removido da caixa de entrada");
+                                sw.WriteLine($"[{DateTime.Now}] Email foi removido da caixa de entrada");
                             }
                             // Quando não há email na caixa de entrada
                             else
