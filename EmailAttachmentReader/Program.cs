@@ -8,7 +8,76 @@ namespace EmailAttachmentReader
     internal class Program
     {
         static void Main()
-        {            
+        {
+            // Variáveis ​​que conterão o valor do intervalo de tempo que está escrito no arquivo config.ini
+            int timeIntervalHours = 0;
+            int timeIntervalMinutes = 0;
+
+            // Verificando a data em que o programa está sendo executado para que possamos transformá-lo em uma string e salvá-la para uso no nome do arquivo de log
+            string actualDate = DateTime.Now.ToString("dd-MM-yyyy");
+
+            // Verificando se o arquivo config.ini existe (arquivo de configuração)
+            if (File.Exists("config.ini") == true)
+            {
+                try
+                {
+                    // Se existir ele irá ler os valores por intervalo de tempo para que a configuração possa ser atualizada
+                    using (StreamReader sr = new StreamReader("config.ini"))
+                    {
+                        string line;
+
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            if (line.StartsWith("HORAS"))
+                            {
+                                string[] lineSplit = line.Trim().Split('=');
+                                timeIntervalHours = int.Parse(lineSplit[1]);
+                            }
+                            else if (line.StartsWith("MINUTOS"))
+                            {
+                                string[] lineSplit = line.Trim().Split('=');
+                                timeIntervalMinutes = int.Parse(lineSplit[1]);
+                            }
+                        }
+                    }
+                }
+                catch (FormatException e)
+                {
+                    using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
+                    {
+                        Console.WriteLine($"[ERROR: {DateTime.Now}] Verifique os valores de entrada no config.ini\nMessagem => {e.Message}");
+                        sw.WriteLine($"[ERROR: {DateTime.Now}] Verifique os valores de entrada no config.ini\nMessagem => {e.Message}");
+                        sw.Close();
+                    }
+                    PressKeyToContinue();
+                    
+                    // Encerra aplicação
+                    Environment.Exit(1);
+                }
+            }
+            else
+            {
+                // Caso não exista será criado um arquivo padrão com 1 hora e 0 minutos como valores
+                using (StreamWriter sw = new StreamWriter("config.ini"))
+                {
+                    sw.WriteLine("[INTERVALO_TEMPO]");
+                    sw.WriteLine("HORAS=1");
+                    sw.WriteLine("MINUTOS=0");
+                    sw.Close();
+                }
+
+                // Valores padrão quando o arquivo é criado
+                timeIntervalHours = 1;
+                timeIntervalMinutes = 0;
+
+                using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
+                {
+                    Console.WriteLine($"[{DateTime.Now}] O arquivo config.ini foi criado");
+                    sw.WriteLine($"[{DateTime.Now}] O arquivo config.ini foi criado");
+                    sw.Close();
+                }
+            }
+
             // Repetição infinita pois o email que estamos procurando pode ver a qualquer momento do dia
             while (true)
             {                
@@ -19,10 +88,7 @@ namespace EmailAttachmentReader
                 if (!Directory.Exists("logs"))
                 {
                     Directory.CreateDirectory("logs");
-                }
-                
-                // Verificando a data em que o programa está sendo executado para que possamos transformá-lo em uma string e salvá-la para uso no nome do arquivo de log
-                string actualDate = DateTime.Now.ToString("dd-MM-yyyy");
+                }               
                 
                 // Iniciando a transmissão de dados para o arquivo de log, mas toda vez que o programa for executado ele gravará dentro do mesmo log daquele dia
                 using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
@@ -116,9 +182,13 @@ namespace EmailAttachmentReader
                         // Fechando a transmissão de dados no log para que o arquivo seja salvo
                         sw.Close();
 
+                        // Converting time in config.ini file to miliseconds
+                        int hourInMiliseconds = timeIntervalHours * 3600000;
+                        int minuteInMiliseconds = timeIntervalMinutes * 1000;
+
                         // Coloca o programa em 'hibernação' por 1 hora e depois roda novamente
-                        Console.WriteLine($"\n\nProcesso em stand-by, próxima vez que vai rodar será no {DateTime.Now.Add(new TimeSpan(0, 1, 0, 0))}\n\n");
-                        Thread.Sleep(3600000);                        
+                        Console.WriteLine($"\n\nProcesso em stand-by, próxima vez que vai rodar será no {DateTime.Now.Add(new TimeSpan(0, timeIntervalHours, timeIntervalMinutes, 0))}\n\n");
+                        Thread.Sleep(hourInMiliseconds + minuteInMiliseconds);
                         Console.Clear();
                     }
                     // Algumas exceções que podem acontecer durante a execução
