@@ -50,6 +50,9 @@ namespace EmailAttachmentReader
                         sw.Close();                        
                     }
                     PressKeyToContinue();
+
+                    // Closes Application
+                    Environment.Exit(1);
                 }
             }
             else
