@@ -9,6 +9,72 @@ namespace EmailAttachmentReader
     {
         static void Main()
         {
+            // Variables that will hold the value of time interval that is written on the config.ini file
+            int timeIntervalHours = 0;
+            int timeIntervalMinutes = 0;
+
+            // Checking the date when the program is running so we can turn into a string and save it for use in the log filename
+            string actualDate = DateTime.Now.ToString("dd-MM-yyyy");
+
+            // Checking if config.ini file exists (configuration file)
+            if (File.Exists("config.ini") == true)
+            {
+                try
+                {
+                    // If exists it will read the values for time interval so the configuration can be updated
+                    using (StreamReader sr = new StreamReader("config.ini"))
+                    {
+                        string line;
+
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            if (line.StartsWith("HOURS"))
+                            {
+                                string[] lineSplit = line.Trim().Split('=');
+                                timeIntervalHours = int.Parse(lineSplit[1]);
+                            }
+                            else if (line.StartsWith("MINUTES"))
+                            {
+                                string[] lineSplit = line.Trim().Split('=');
+                                timeIntervalMinutes = int.Parse(lineSplit[1]);
+                            }
+                        }
+                    }
+                }
+                catch(FormatException e)
+                {
+                    using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
+                    {
+                        Console.WriteLine($"[ERROR: {DateTime.Now}] Check input values on config.ini\nMessage => {e.Message}");
+                        sw.WriteLine($"[ERROR: {DateTime.Now}] Check input values on config.ini\nMessage => {e.Message}");
+                        sw.Close();                        
+                    }
+                    PressKeyToContinue();
+                }
+            }
+            else
+            {
+                // If dont exists it will be created a default file with 1 hour and 0 minutes as values
+                using (StreamWriter sw = new StreamWriter("config.ini"))
+                {
+                    sw.WriteLine("[TIME_INTERVAL]");
+                    sw.WriteLine("HOURS=1");
+                    sw.WriteLine("MINUTES=0");
+                    sw.Close();
+                }
+
+                // Default values when file is created
+                timeIntervalHours = 1;
+                timeIntervalMinutes = 0;
+
+                using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
+                {
+                    Console.WriteLine($"[{DateTime.Now}] The file config.ini was created");
+                    sw.WriteLine($"[{DateTime.Now}] The file config.ini was created");
+                    sw.Close();
+                }
+            }
+
             // Infinite loop because the email we are looking for can come anytime of the day
             while (true)
             {
@@ -19,10 +85,7 @@ namespace EmailAttachmentReader
                 if (!Directory.Exists("logs"))
                 {
                     Directory.CreateDirectory("logs");
-                }
-
-                // Checking the date when the program is running so we can turn into a string and save it for use in the log filename
-                string actualDate = DateTime.Now.ToString("dd-MM-yyyy");
+                }               
 
                 // Starting data transmission to the log file, but everytime the program runs it will write inside the same log of that day
                 using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
@@ -114,11 +177,15 @@ namespace EmailAttachmentReader
                         }
 
                         // Closing the data transmission to the log so the file will be saved
-                        sw.Close();
+                        sw.Close();                                                 
+
+                        // Converting time in config.ini file to miliseconds
+                        int hourInMiliseconds = timeIntervalHours * 3600000;
+                        int minuteInMiliseconds = timeIntervalMinutes * 1000;
 
                         // Puts the program to 'sleep' for 1 hour and then it will run again
-                        Console.WriteLine($"\n\nProcess in stand-by, next run will be at {DateTime.Now.Add(new TimeSpan(0, 1, 0, 0))}\n\n");
-                        Thread.Sleep(3600000);                        
+                        Console.WriteLine($"\n\nProcess in stand-by, next run will be at {DateTime.Now.Add(new TimeSpan(0, timeIntervalHours, timeIntervalMinutes, 0))}\n\n");
+                        Thread.Sleep(hourInMiliseconds + minuteInMiliseconds);                        
                         Console.Clear();
                     }
                     // Some exceptions that can happen while it's running
