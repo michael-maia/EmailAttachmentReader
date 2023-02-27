@@ -58,6 +58,7 @@ namespace EmailAttachmentReader
                             sw.Close();
                         }
 
+                        PressKeyToContinue();
                         Environment.Exit(1);
                     }
                 }
@@ -69,9 +70,8 @@ namespace EmailAttachmentReader
                         sw.WriteLine($"[ERROR: {DateTime.Now}] Verifique os valores de entrada no config.ini\nMessagem => {e.Message}");
                         sw.Close();
                     }
-                    PressKeyToContinue();
-                    
-                    // Encerra aplicação
+
+                    PressKeyToContinue();                    
                     Environment.Exit(1);
                 }
             }
