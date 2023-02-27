@@ -45,6 +45,7 @@ namespace EmailAttachmentReader
                                 timeIntervalMinutes = int.Parse(lineSplit[1]);
                             }
                         }
+                        sr.Close();
                     }
 
                     if (timeIntervalHours < 0 || timeIntervalMinutes < 0)
