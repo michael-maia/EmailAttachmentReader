@@ -16,6 +16,12 @@ namespace EmailAttachmentReader
             // Checking the date when the program is running so we can turn into a string and save it for use in the log filename
             string actualDate = DateTime.Now.ToString("dd-MM-yyyy");
 
+            // Checking if the folder 'logs' exists, because is where the program will store all log data
+            if (!Directory.Exists("logs"))
+            {
+                Directory.CreateDirectory("logs");
+            }
+
             // Checking if config.ini file exists (configuration file)
             if (File.Exists("config.ini") == true)
             {
@@ -40,6 +46,19 @@ namespace EmailAttachmentReader
                             }
                         }
                     }
+
+                    if (timeIntervalHours < 0 || timeIntervalMinutes < 0)
+                    {
+                        using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
+                        {
+                            Console.WriteLine($"[{DateTime.Now}] The time interval value cannot be negative! Change it on config.ini");
+                            sw.WriteLine($"[{DateTime.Now}] The time interval value cannot be negative! Change it on config.ini");
+                            sw.Close();
+                        }
+
+                        PressKeyToContinue();
+                        Environment.Exit(1);
+                    }
                 }
                 catch(FormatException e)
                 {
@@ -49,9 +68,8 @@ namespace EmailAttachmentReader
                         sw.WriteLine($"[ERROR: {DateTime.Now}] Check input values on config.ini\nMessage => {e.Message}");
                         sw.Close();                        
                     }
-                    PressKeyToContinue();
 
-                    // Closes Application
+                    PressKeyToContinue();                    
                     Environment.Exit(1);
                 }
             }
@@ -82,13 +100,7 @@ namespace EmailAttachmentReader
             while (true)
             {
                 // Adding User Secrets to read what it's stored
-                var config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
-
-                // Checking if the folder 'logs' exists, because is where the program will store all log data
-                if (!Directory.Exists("logs"))
-                {
-                    Directory.CreateDirectory("logs");
-                }               
+                var config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();                              
 
                 // Starting data transmission to the log file, but everytime the program runs it will write inside the same log of that day
                 using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
