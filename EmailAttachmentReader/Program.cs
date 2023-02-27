@@ -16,6 +16,12 @@ namespace EmailAttachmentReader
             // Verificando a data em que o programa está sendo executado para que possamos transformá-lo em uma string e salvá-la para uso no nome do arquivo de log
             string actualDate = DateTime.Now.ToString("dd-MM-yyyy");
 
+            // Verificando se a pasta 'logs' existe, pois é onde o programa vai guardar todos dados de log
+            if (!Directory.Exists("logs"))
+            {
+                Directory.CreateDirectory("logs");
+            }
+
             // Verificando se o arquivo config.ini existe (arquivo de configuração)
             if (File.Exists("config.ini") == true)
             {
@@ -82,14 +88,8 @@ namespace EmailAttachmentReader
             while (true)
             {                
                 // Adicionando User Secrets para ler o que foi guardado
-                var config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
-                
-                // Verificando se a pasta 'logs' existe, pois é onde o programa vai guardar todos dados de log
-                if (!Directory.Exists("logs"))
-                {
-                    Directory.CreateDirectory("logs");
-                }               
-                
+                var config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();              
+                               
                 // Iniciando a transmissão de dados para o arquivo de log, mas toda vez que o programa for executado ele gravará dentro do mesmo log daquele dia
                 using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
                 {
