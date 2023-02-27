@@ -2,6 +2,7 @@
 using OpenPop.Mime;
 using OpenPop.Pop3;
 using OpenPop.Pop3.Exceptions;
+using System.Runtime.ConstrainedExecution;
 
 namespace EmailAttachmentReader
 {
@@ -45,6 +46,19 @@ namespace EmailAttachmentReader
                                 timeIntervalMinutes = int.Parse(lineSplit[1]);
                             }
                         }
+                        sr.Close();
+                    }
+
+                    if (timeIntervalHours < 0 || timeIntervalMinutes < 0)
+                    {
+                        using (StreamWriter sw = new StreamWriter($"logs\\log_{actualDate}.txt", append: true))
+                        {
+                            Console.WriteLine($"[{DateTime.Now}] O tempo de intervalo não pode ser negativo, mude no config.ini!");
+                            sw.WriteLine($"[{ DateTime.Now}] O tempo de intervalo não pode ser negativo, mude no config.ini!");
+                            sw.Close();
+                        }
+
+                        Environment.Exit(1);
                     }
                 }
                 catch (FormatException e)
