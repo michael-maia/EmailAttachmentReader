@@ -100,6 +100,9 @@ namespace EmailAttachmentReader
             // Infinite loop because the email we are looking for can come anytime of the day
             while (true)
             {
+                // Updating the date for creating a log file per day
+                actualDate = DateTime.Now.ToString("dd-MM-yyyy");
+
                 // Adding User Secrets to read what it's stored
                 var config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();                              
 
