@@ -2,7 +2,6 @@
 using OpenPop.Mime;
 using OpenPop.Pop3;
 using OpenPop.Pop3.Exceptions;
-using System.Runtime.ConstrainedExecution;
 
 namespace EmailAttachmentReader
 {
@@ -100,7 +99,10 @@ namespace EmailAttachmentReader
 
             // Repetição infinita pois o email que estamos procurando pode ver a qualquer momento do dia
             while (true)
-            {                
+            {
+                // Atualizando a data para criação de um arquivo log por dia
+                actualDate = DateTime.Now.ToString("dd-MM-yyyy");
+
                 // Adicionando User Secrets para ler o que foi guardado
                 var config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();              
                                
